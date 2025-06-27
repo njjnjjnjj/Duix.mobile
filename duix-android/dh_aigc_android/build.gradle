@@ -36,4 +36,6 @@ ext {
     targetSdkVersion = 33
     versionCode = 2
     versionName = "0.0.2"
+    kotlin_version = '1.6.10'  // 根据需要调整 Kotlin 版本
+    compose_version = '1.1.1'  // Compose 插件版本
 }

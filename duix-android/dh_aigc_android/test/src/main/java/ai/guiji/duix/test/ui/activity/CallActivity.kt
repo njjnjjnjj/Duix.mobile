@@ -33,7 +33,7 @@ class CallActivity : BaseActivity() {
     private lateinit var binding: ActivityCallBinding
     private var duix: DUIX? = null
     private var mDUIXRender: DUIXRenderer? = null
-    private var mModelInfo: ModelInfo?=null     // 加载的模型信息
+    private var mModelInfo: ModelInfo? = null     // 加载的模型信息
 
     private val debugFrame = false
 
@@ -50,7 +50,9 @@ class CallActivity : BaseActivity() {
         Log.e("123", "modelDir: $modelDir")
 
         binding.btnPlayEN.setOnClickListener {
-            playWav("output.wav")
+            // TODO: 实现多语音切换
+//            playWav("output.wav")
+            playWav("male.wav")
         }
 
         Glide.with(mContext).load("file:///android_asset/bg/bg1.png").into(binding.ivBg)
@@ -69,7 +71,7 @@ class CallActivity : BaseActivity() {
         binding.glTextureView.renderMode =
             GLSurfaceView.RENDERMODE_WHEN_DIRTY      // 一定要在设置完Render之后再调用
 
-        val sink = if (debugFrame){
+        val sink = if (debugFrame) {
             DebugSink { imageFrame ->
                 mDUIXRender?.onVideoFrame(imageFrame)
                 // to bitmap
@@ -88,7 +90,11 @@ class CallActivity : BaseActivity() {
 
                 Constant.CALLBACK_EVENT_INIT_ERROR -> {
                     runOnUiThread {
-                        Toast.makeText(mContext, "Initialization exception: $msg", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            mContext,
+                            "Initialization exception: $msg",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
 
@@ -101,7 +107,7 @@ class CallActivity : BaseActivity() {
                 Constant.CALLBACK_EVENT_AUDIO_PLAY_END -> {
                     Log.e(TAG, "CALLBACK_EVENT_PLAY_END: $msg")
                     runOnUiThread {
-                        if ((mModelInfo?.motionRegions?.size ?: 0) > 0){
+                        if ((mModelInfo?.motionRegions?.size ?: 0) > 0) {
                             duix?.stopMotion(true)
                         }
                     }
@@ -121,22 +127,23 @@ class CallActivity : BaseActivity() {
         duix?.init()
     }
 
-    private var tempBitmap: Bitmap?=null
+    private var tempBitmap: Bitmap? = null
 
     /**
      * 将imageFrame转换成RGB显示，效率较低会导致渲染卡顿。
      */
-    private fun toBitmapDebug(imageFrame: ImageFrame){
-        tempBitmap?:let{
-            tempBitmap = Bitmap.createBitmap(imageFrame.width, imageFrame.height, Bitmap.Config.ARGB_8888)
+    private fun toBitmapDebug(imageFrame: ImageFrame) {
+        tempBitmap ?: let {
+            tempBitmap =
+                Bitmap.createBitmap(imageFrame.width, imageFrame.height, Bitmap.Config.ARGB_8888)
         }
         for (y in 0 until imageFrame.height) {
-            for (x in 0 until imageFrame.width){
+            for (x in 0 until imageFrame.width) {
                 val b = imageFrame.rawBuffer[(y * imageFrame.width + x) * 3].toInt() and 0xFF
                 val g = imageFrame.rawBuffer[(y * imageFrame.width + x) * 3 + 1].toInt() and 0xFF
                 val r = imageFrame.rawBuffer[(y * imageFrame.width + x) * 3 + 2].toInt() and 0xFF
                 val pixelColor = 0xff000000.toInt() or (r shl 16) or (g shl 8) or b
-                if (tempBitmap?.isRecycled == true){
+                if (tempBitmap?.isRecycled == true) {
                     return
                 }
                 tempBitmap?.setPixel(x, y, pixelColor)
@@ -144,7 +151,7 @@ class CallActivity : BaseActivity() {
         }
         runOnUiThread {
             tempBitmap?.let {
-                if (!it.isRecycled){
+                if (!it.isRecycled) {
                     binding.ivDebugImage.setImageBitmap(tempBitmap)
                 }
             }
@@ -155,7 +162,7 @@ class CallActivity : BaseActivity() {
         Log.e(TAG, "init ok")
         runOnUiThread {
             // 设置是随机播放动作区间还是顺序播放
-            if ((mModelInfo?.motionRegions?.size ?: 0) > 0){
+            if ((mModelInfo?.motionRegions?.size ?: 0) > 0) {
                 duix?.setRandomMotion(true)
             }
             binding.btnPlayEN.visibility = View.VISIBLE
@@ -201,11 +208,11 @@ class CallActivity : BaseActivity() {
         }
     }
 
-    private fun playAudioWithMotion(path: String){
+    private fun playAudioWithMotion(path: String) {
         runOnUiThread {
             duix?.playAudio(path)
             // 如果模型支持动作区间会播放动作区间
-            if ((mModelInfo?.motionRegions?.size ?: 0) > 0){
+            if ((mModelInfo?.motionRegions?.size ?: 0) > 0) {
                 duix?.startMotion()
             }
         }
